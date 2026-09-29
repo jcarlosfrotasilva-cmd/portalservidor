@@ -129,6 +129,45 @@ export default function ServidorLicencaPremioPage() {
               </div>
             </div>
 
+            {/* Próxima Certidão */}
+            {calcData.temProximaCertidao && calcData.proximaCertidao && (
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-6 mb-6">
+                <h3 className="font-bold text-purple-900 text-lg mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-purple-600" />
+                  Próxima Certidão de Licença Prêmio
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-sm text-purple-700 mb-2 font-medium">Período Aquisitivo:</p>
+                    <p className="text-2xl font-bold text-purple-900">
+                      {formatDate(calcData.proximaCertidao.periodoInicial)} → {formatDate(calcData.proximaCertidao.periodoFinal)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-purple-700 mb-2 font-medium">Status:</p>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+                        calcData.proximaCertidao.statusVencimento === 'VENCIDO' ? 'bg-red-100 text-red-700' :
+                        calcData.proximaCertidao.statusVencimento === 'VENCENDO_EM_BREVE' ? 'bg-orange-100 text-orange-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {calcData.proximaCertidao.diasRestantes < 0
+                          ? `Vencido há ${Math.abs(calcData.proximaCertidao.diasRestantes)} dias`
+                          : calcData.proximaCertidao.diasRestantes === 0
+                          ? 'Vence hoje!'
+                          : `Faltam ${calcData.proximaCertidao.diasRestantes} dias`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-purple-200">
+                  <p className="text-xs text-purple-600">
+                    Cálculo: período final da última certidão ({formatDate(calcData.ultimaCertidao.periodoFinal)}) + 1 dia + 1824 dias = {formatDate(calcData.proximaCertidao.periodoFinal)}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Certidões */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
               <div className="px-6 py-4 border-b border-slate-200">

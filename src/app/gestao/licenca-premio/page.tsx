@@ -13,6 +13,7 @@ export default function GestaoLicencaPremioPage() {
   const [certidoes, setCertidoes] = useState<any[]>([]);
   const [fruiçoes, setFruiçoes] = useState<Record<number, any[]>>({});
   const [calcData, setCalcData] = useState<any>(null);
+  const [statusServidores, setStatusServidores] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedServidorId, setSelectedServidorId] = useState<number | null>(null);
 
@@ -37,6 +38,13 @@ export default function GestaoLicencaPremioPage() {
     try {
       const res = await fetch('/api/servidores');
       if (res.ok) setServidores(await res.json());
+    } catch { /* */ }
+  }, []);
+
+  const loadStatusServidores = useCallback(async () => {
+    try {
+      const res = await fetch('/api/licenca-premio/status');
+      if (res.ok) setStatusServidores(await res.json());
     } catch { /* */ }
   }, []);
 
@@ -69,7 +77,9 @@ export default function GestaoLicencaPremioPage() {
   }, []);
 
   useEffect(() => {
-     loadServidores(); }, [loadServidores]);
+     loadServidores();
+     loadStatusServidores();
+  }, [loadServidores, loadStatusServidores]);
 
   const handleServidorChange = (id: string) => {
     if (!id) { setSelectedServidorId(null); setCertidoes([]); setCalcData(null); return; }
@@ -240,6 +250,84 @@ export default function GestaoLicencaPremioPage() {
           </div>
         </div>
       </div>
+
+      {/* Status de Vencimentos */}
+      {statusServidores && statusServidores.totais && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+          <h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-teal-600" />
+            Status de Vencimentos
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+              <p className="text-3xl font-bold text-red-600">{statusServidores.totais.vencidos}</p>
+              <p className="text-xs text-red-700 mt-1">Vencidos</p>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+              <p className="text-3xl font-bold text-orange-600">{statusServidores.totais.vencendoEmBreve}</p>
+              <p className="text-xs text-orange-700 mt-1">Vencendo em Breve</p>
+              <p className="text-xs text-orange-500">(até 90 dias)</p>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+              <p className="text-3xl font-bold text-amber-600">{statusServidores.totais.vencendoEsteAno}</p>
+              <p className="text-xs text-amber-700 mt-1">Este Ano</p>
+              <p className="text-xs text-amber-500">(até 12 meses)</p>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <p className="text-3xl font-bold text-green-600">{statusServidores.totais.emAndamento}</p>
+              <p className="text-xs text-green-700 mt-1">Em Andamento</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+              <p className="text-3xl font-bold text-slate-600">{statusServidores.totais.semCertidao}</p>
+              <p className="text-xs text-slate-700 mt-1">Sem Certidão</p>
+            </div>
+          </div>
+
+          {/* Lista detalhada */}
+          <div className="border-t border-slate-200 pt-4">
+            <h3 className="font-semibold text-slate-700 mb-3">Detalhamento por Servidor</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-slate-200">
+                    <th className="text-left py-2 px-3 font-semibold text-slate-600 text-xs">Servidor</th>
+                    <th className="text-left py-2 px-3 font-semibold text-slate-600 text-xs">Cargo</th>
+                    <th className="text-center py-2 px-3 font-semibold text-slate-600 text-xs">Certidões</th>
+                    <th className="text-left py-2 px-3 font-semibold text-slate-600 text-xs">Próximo Vencimento</th>
+                    <th className="text-left py-2 px-3 font-semibold text-slate-600 text-xs">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {statusServidores.servidores?.slice(0, 20).map((s: any) => (
+                    <tr key={s.servidorId} className="border-b border-slate-100 hover:bg-slate-50">
+                      <td className="py-2 px-3 font-medium text-slate-800">{s.nome}</td>
+                      <td className="py-2 px-3 text-slate-600">{s.cargo || '—'}</td>
+                      <td className="py-2 px-3 text-center text-slate-600">{s.totalCertidoes}</td>
+                      <td className="py-2 px-3 text-slate-600">{s.proximoVencimento ? formatDate(s.proximoVencimento) : '—'}</td>
+                      <td className="py-2 px-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                          s.status === 'VENCIDO' ? 'bg-red-100 text-red-700' :
+                          s.status === 'VENCENDO_EM_BREVE' ? 'bg-orange-100 text-orange-700' :
+                          s.status === 'VENCENDO_ESTE_ANO' ? 'bg-amber-100 text-amber-700' :
+                          s.status === 'EM_ANDAMENTO' ? 'bg-green-100 text-green-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {s.mensagem}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {statusServidores.servidores?.length > 20 && (
+                <p className="text-xs text-slate-500 mt-2 text-center">
+                  Mostrando 20 de {statusServidores.servidores.length} servidores
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Select Server */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">

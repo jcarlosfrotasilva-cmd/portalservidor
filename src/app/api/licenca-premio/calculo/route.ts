@@ -1,53 +1,97 @@
-import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { licencaPremioCertidao, servidores } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
+/**
+ * Calcula a próxima certidão de licença prêmio com base na última concedida
+ * Regra: período final + 1 dia + 1824 dias = próximo período aquisitivo
+ */
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const servidorId = searchParams.get('servidorId');
+
+  if (!servidorId) {
+    return Response.json({ error: 'servidorId é obrigatório' }, { status: 400 });
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const servidorId = searchParams.get('servidorId');
-
-    if (!servidorId) {
-      return NextResponse.json({ error: 'servidorId é obrigatório' }, { status: 400 });
-    }
-
-    // Check elegibilidade
-    const servidorData = await db
-      .select()
-      .from(servidores)
-      .where(eq(servidores.id, parseInt(servidorId)));
-
-    if (servidorData.length === 0) {
-      return NextResponse.json({ error: 'Servidor não encontrado' }, { status: 404 });
-    }
-
-    const categoria = (servidorData[0].categoria || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const elegivel = categoria.includes('A-EFETIVO') || categoria.includes('ACT-F') || categoria.includes('AEFETIVO');
-
+    // Buscar todas as certidões do servidor ordenadas por período final (desc)
     const certidoes = await db
       .select()
       .from(licencaPremioCertidao)
       .where(eq(licencaPremioCertidao.servidorId, parseInt(servidorId)))
       .orderBy(licencaPremioCertidao.anoCertidao);
 
-    const totalCertidoes = certidoes.length;
-    const totalSaldo = certidoes.reduce((acc, c) => acc + ((c.saldoTotal ?? 90) - (c.saldoUsado ?? 0)), 0);
-    const totalUsado = certidoes.reduce((acc, c) => acc + (c.saldoUsado ?? 0), 0);
-    const totalPotencial = totalCertidoes * 90;
+    if (certidoes.length === 0) {
+      return Response.json({
+        temProximaCertidao: false,
+        mensagem: 'Nenhuma certidão encontrada para este servidor',
+      });
+    }
 
-    return NextResponse.json({
-      elegivel,
-      nome: servidorData[0].nome,
-      cargo: servidorData[0].cargo,
-      categoria: servidorData[0].categoria,
+    // Pegar a última certidão (maior ano/período final)
+    const ultimaCertidao = certidoes[certidoes.length - 1];
+
+    // Calcular próximo período aquisitivo
+    // Exemplo: período final 13/10/2022 → próximo início: 14/10/2022 → próximo fim: 13/10/2027
+    const periodoFinal = new Date(ultimaCertidao.periodoFinal + 'T00:00:00');
+    const proximoInicio = new Date(periodoFinal);
+    proximoInicio.setDate(proximoInicio.getDate() + 1); // +1 dia
+
+    const proximoFim = new Date(proximoInicio);
+    proximoFim.setDate(proximoFim.getDate() + 1824); // +1824 dias = total 1825 dias
+
+    // Calcular dias restantes até o vencimento (proximoFim)
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const diasRestantes = Math.ceil((proximoFim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Status do vencimento
+    let statusVencimento: string;
+    if (diasRestantes < 0) {
+      statusVencimento = 'VENCIDO';
+    } else if (diasRestantes <= 90) {
+      statusVencimento = 'VENCENDO_EM_BREVE';
+    } else {
+      statusVencimento = 'EM_ANDAMENTO';
+    }
+
+    // Buscar informações completas do servidor
+    const servidorInfoResult = await db
+      .select()
+      .from(servidores)
+      .where(eq(servidores.id, parseInt(servidorId)))
+      .limit(1);
+    const servidorInfo = servidorInfoResult[0];
+
+    return Response.json({
+      elegivel: true,
+      nome: servidorInfo?.nome || '',
+      cargo: servidorInfo?.cargo || '',
+      categoria: servidorInfo?.categoria || '',
       certidoes,
-      totalCertidoes,
-      totalPotencial,
-      totalUsado,
-      totalSaldo,
+      totalCertidoes: certidoes.length,
+      totalPotencial: certidoes.length * 90,
+      totalUsado: certidoes.reduce((sum, c) => sum + (c.saldoUsado || 0), 0),
+      totalSaldo: certidoes.reduce((sum, c) => sum + ((c.saldoTotal || 90) - (c.saldoUsado || 0)), 0),
+      temProximaCertidao: true,
+      ultimaCertidao: {
+        numero: ultimaCertidao.numeroCertidao,
+        ano: ultimaCertidao.anoCertidao,
+        periodoInicial: ultimaCertidao.periodoInicial,
+        periodoFinal: ultimaCertidao.periodoFinal,
+      },
+      proximaCertidao: {
+        periodoInicial: proximoInicio.toISOString().split('T')[0],
+        periodoFinal: proximoFim.toISOString().split('T')[0],
+        diasRestantes,
+        statusVencimento,
+        numero: parseInt(ultimaCertidao.numeroCertidao) + 1,
+        ano: new Date(proximoFim).getFullYear(),
+      },
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error('Erro ao calcular próxima certidão:', error);
+    return Response.json({ error: 'Erro ao calcular próxima certidão' }, { status: 500 });
   }
 }
