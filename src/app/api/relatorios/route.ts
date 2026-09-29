@@ -65,7 +65,8 @@ export async function GET(request: Request) {
               registros: [],
             };
           }
-          if (reg.subtipo === 'ORIENTACAO_TECNICA') porServidor[key].ot++;
+          // Verifica se é O.T. (compatível com registros antigos tipo='OT' e novos subtipo='ORIENTACAO_TECNICA')
+          if (reg.tipo === 'OT' || reg.subtipo === 'ORIENTACAO_TECNICA') porServidor[key].ot++;
           else porServidor[key].ausencia++;
           porServidor[key].registros.push(reg);
         }

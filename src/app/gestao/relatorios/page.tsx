@@ -19,6 +19,9 @@ const SUBTIPOS_AUSENCIA: Record<string, string> = {
   AUXILIO_DOENCA: 'Auxílio-Doença',
 };
 
+// Função auxiliar para verificar se é O.T. (compatível com registros antigos e novos)
+const isOT = (r: any) => r.tipo === 'OT' || r.subtipo === 'ORIENTACAO_TECNICA';
+
 export default function RelatoriosPage() {
   const [tipoRelatorio, setTipoRelatorio] = useState<RelatorioTipo>('geral');
   const [dados, setDados] = useState<any[]>([]);
@@ -218,13 +221,13 @@ export default function RelatoriosPage() {
                                 <td className="py-1.5 px-2 text-slate-600 text-xs">{formatDate(r.data)}</td>
                                 <td className="py-1.5 px-2 text-xs">
                                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                    r.subtipo === 'ORIENTACAO_TECNICA' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                                    isOT(r) ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
                                   }`}>
-                                    {r.subtipo === 'ORIENTACAO_TECNICA' ? 'O.T.' : SUBTIPOS_AUSENCIA[r.subtipo] || 'Ausência'}
+                                    {isOT(r) ? 'O.T.' : SUBTIPOS_AUSENCIA[r.subtipo] || 'Ausência'}
                                   </span>
                                 </td>
                                 <td className="py-1.5 px-2 text-slate-600 text-xs max-w-32 truncate">
-                                  {r.subtipo === 'ORIENTACAO_TECNICA' ? r.assunto : (
+                                  {isOT(r) ? r.assunto : (
                                     <>
                                       {r.quantidadeDias && `${r.quantidadeDias} dias `}
                                       {r.quantidadeHoras && `${r.quantidadeHoras}h/aula `}
