@@ -139,7 +139,7 @@ export default function ServidorOrientacaoPage() {
           </button>
         </div>
 
-        {/* Registros */}
+        {/* Registros (ordenados por data crescente) */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
           {registros.length === 0 ? (
             <div className="text-center py-16">
@@ -148,41 +148,55 @@ export default function ServidorOrientacaoPage() {
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {registros.map(r => (
-                <div key={r.id} className={`px-6 py-4 ${r.tipo === 'OT' ? 'bg-gradient-to-r from-orange-50/50 to-transparent' : 'bg-gradient-to-r from-red-50/50 to-transparent'}`}>
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isOT(r.subtipo) ? 'bg-orange-100' : 'bg-red-100'
-                    }`}>
-                      {isOT(r.subtipo) ? <BookOpen className="w-6 h-6 text-orange-600" /> : <UserX className="w-6 h-6 text-red-600" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1 flex-wrap">
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          isOT(r.subtipo) ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+              {[...registros]
+                .sort((a, b) => (a.data || '').localeCompare(b.data || ''))
+                .map(r => {
+                  // Destaque do assunto/detalhes principal
+                  const destaquePrincipal = isOT(r.subtipo)
+                    ? r.assunto
+                    : [
+                        r.quantidadeDias && `${r.quantidadeDias} dias`,
+                        r.quantidadeHoras && `${r.quantidadeHoras} hora(s)/aula`,
+                        r.dataInicio && r.dataFim && `${formatDate(r.dataInicio)} → ${formatDate(r.dataFim)}`,
+                      ].filter(Boolean).join(' • ');
+                  return (
+                    <div key={r.id} className={`px-6 py-5 ${isOT(r.subtipo) ? 'bg-gradient-to-r from-orange-50/50 to-transparent' : 'bg-gradient-to-r from-red-50/50 to-transparent'}`}>
+                      <div className="flex items-start gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                          isOT(r.subtipo) ? 'bg-orange-100' : 'bg-red-100'
                         }`}>
-                          {isOT(r.subtipo) ? 'Orientação Técnica' : getSubtipoLabel(r.subtipo || '')}
-                        </span>
-                        <span className="flex items-center gap-1 text-sm text-slate-600">
-                          <Calendar className="w-4 h-4" /> {formatDate(r.data)}
-                        </span>
-                      </div>
+                          {isOT(r.subtipo) ? <BookOpen className="w-6 h-6 text-orange-600" /> : <UserX className="w-6 h-6 text-red-600" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                              isOT(r.subtipo) ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                              {isOT(r.subtipo) ? 'Orientação Técnica' : getSubtipoLabel(r.subtipo || '')}
+                            </span>
+                            <span className="flex items-center gap-1 text-sm text-slate-600">
+                              <Calendar className="w-4 h-4" /> {formatDate(r.data)}
+                            </span>
+                          </div>
 
-                      {isOT(r.subtipo) && r.assunto && <p className="font-semibold text-slate-800 text-sm">{r.assunto}</p>}
+                          {/* ASSUNTO/DETALHES DESTACADO */}
+                          {destaquePrincipal && (
+                            <p className="font-bold text-slate-900 text-base mb-2 print-assunto-destaque">
+                              {destaquePrincipal}
+                            </p>
+                          )}
 
-                      <div className="flex items-center gap-4 text-xs text-slate-400 mt-1 flex-wrap">
-                        {r.local && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {r.local}</span>}
-                        {r.horaInicio && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {r.horaInicio}{r.horaTermino ? ` - ${r.horaTermino}` : ''}</span>}
-                        {r.quantidadeDias && <span className="font-medium text-red-600">{r.quantidadeDias} dias</span>}
-                        {r.quantidadeHoras && <span className="font-medium text-red-600">{r.quantidadeHoras} hora(s)/aula(s)</span>}
-                        {r.dataInicio && r.dataFim && <span className="block w-full mt-1">{formatDate(r.dataInicio)} → {formatDate(r.dataFim)}</span>}
-                        {r.dataDoeOuEmail && <span>DOE/E-mail: {r.dataDoeOuEmail}</span>}
+                          <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
+                            {r.local && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {r.local}</span>}
+                            {r.horaInicio && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {r.horaInicio}{r.horaTermino ? ` - ${r.horaTermino}` : ''}</span>}
+                            {r.dataDoeOuEmail && <span>DOE/E-mail: {r.dataDoeOuEmail}</span>}
+                          </div>
+                          {r.observacao && <p className="text-xs text-slate-400 mt-1 italic">{r.observacao}</p>}
+                        </div>
                       </div>
-                      {r.observacao && <p className="text-xs text-slate-400 mt-1 italic">{r.observacao}</p>}
                     </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
             </div>
           )}
         </div>

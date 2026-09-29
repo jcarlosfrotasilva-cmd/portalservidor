@@ -201,45 +201,54 @@ export default function RelatoriosPage() {
                           </div>
                         </div>
 
-                        {/* Detalhamento dos Registros */}
+                        {/* Detalhamento dos Registros (ordenados por data crescente) */}
                         <table className="w-full text-sm border-collapse">
                           <thead>
-                            <tr className="border-b border-slate-400">
-                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Nº</th>
-                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Data</th>
-                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Tipo</th>
-                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Assunto / Detalhes</th>
-                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Local</th>
-                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Horário</th>
-                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">DOE/E-mail</th>
+                            <tr className="border-b-2 border-slate-700">
+                              <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Nº</th>
+                              <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Data</th>
+                              <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Tipo</th>
+                              <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Assunto / Detalhes</th>
+                              <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Local</th>
+                              <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Horário</th>
+                              <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">DOE/E-mail</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {serv.registros?.map((r: any, i: number) => (
-                              <tr key={r.id} className="border-b border-slate-200">
-                                <td className="py-1.5 px-2 text-slate-500 text-xs">{i + 1}</td>
-                                <td className="py-1.5 px-2 text-slate-600 text-xs">{formatDate(r.data)}</td>
-                                <td className="py-1.5 px-2 text-xs">
-                                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                    isOT(r) ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
-                                  }`}>
-                                    {isOT(r) ? 'O.T.' : SUBTIPOS_AUSENCIA[r.subtipo] || 'Ausência'}
-                                  </span>
-                                </td>
-                                <td className="py-1.5 px-2 text-slate-600 text-xs max-w-32 truncate">
-                                  {isOT(r) ? r.assunto : (
-                                    <>
-                                      {r.quantidadeDias && `${r.quantidadeDias} dias `}
-                                      {r.quantidadeHoras && `${r.quantidadeHoras}h/aula `}
-                                      {r.dataInicio && r.dataFim && `${formatDate(r.dataInicio)} → ${formatDate(r.dataFim)}`}
-                                    </>
-                                  )}
-                                </td>
-                                <td className="py-1.5 px-2 text-slate-600 text-xs">{r.local || '—'}</td>
-                                <td className="py-1.5 px-2 text-slate-600 text-xs">{r.horaInicio && r.horaTermino ? `${r.horaInicio}-${r.horaTermino}` : '—'}</td>
-                                <td className="py-1.5 px-2 text-slate-600 text-xs">{r.dataDoeOuEmail || '—'}</td>
-                              </tr>
-                            ))}
+                            {[...serv.registros]
+                              .sort((a: any, b: any) => {
+                                const da = a.data || '';
+                                const db = b.data || '';
+                                return da.localeCompare(db);
+                              })
+                              .map((r: any, i: number) => {
+                                const detalhes = isOT(r)
+                                  ? r.assunto || ''
+                                  : [
+                                      r.quantidadeDias && `${r.quantidadeDias} dias`,
+                                      r.quantidadeHoras && `${r.quantidadeHoras}h/aula`,
+                                      r.dataInicio && r.dataFim && `${formatDate(r.dataInicio)} → ${formatDate(r.dataFim)}`,
+                                    ].filter(Boolean).join(', ');
+                                return (
+                                  <tr key={r.id} className="border-b border-slate-200">
+                                    <td className="py-2 px-2 text-slate-500 text-xs align-top">{i + 1}</td>
+                                    <td className="py-2 px-2 text-slate-700 text-xs align-top whitespace-nowrap">{formatDate(r.data)}</td>
+                                    <td className="py-2 px-2 text-xs align-top">
+                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                        isOT(r) ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                                      }`}>
+                                        {isOT(r) ? 'O.T.' : SUBTIPOS_AUSENCIA[r.subtipo] || 'Ausência'}
+                                      </span>
+                                    </td>
+                                    <td className="py-2 px-2 text-slate-900 text-sm font-semibold align-top print-assunto-destaque">
+                                      {detalhes || '—'}
+                                    </td>
+                                    <td className="py-2 px-2 text-slate-700 text-xs align-top">{r.local || '—'}</td>
+                                    <td className="py-2 px-2 text-slate-700 text-xs align-top whitespace-nowrap">{r.horaInicio && r.horaTermino ? `${r.horaInicio}-${r.horaTermino}` : '—'}</td>
+                                    <td className="py-2 px-2 text-slate-700 text-xs align-top whitespace-nowrap">{r.dataDoeOuEmail || '—'}</td>
+                                  </tr>
+                                );
+                              })}
                           </tbody>
                         </table>
                       </div>
