@@ -8,19 +8,21 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const SUBTIPOS_AUSENCIA = [
-  { value: 'FALTA_JUSTIFICADA', label: 'Falta Justificada' },
-  { value: 'FALTA_INJUSTIFICADA', label: 'Falta Injustificada' },
-  { value: 'FALTA_MEDICA', label: 'Falta Médica' },
-  { value: 'FALTA_TOTAL', label: 'Falta Total' },
-  { value: 'FALTA_MEDICA_PARCIAL', label: 'Falta Médica Parcial' },
-  { value: 'FALTA_AULA', label: 'Falta de Aula (por hora/aula)' },
-  { value: 'LICENCA_SAUDE', label: 'Licença Saúde' },
-  { value: 'AUXILIO_DOENCA', label: 'Auxílio-Doença' },
+// Todos os tipos unificados (O.T. + Ausências)
+const SUBTIPOS = [
+  { value: 'ORIENTACAO_TECNICA', label: 'Orientação Técnica', tipo: 'OT' },
+  { value: 'FALTA_JUSTIFICADA', label: 'Falta Justificada', tipo: 'AUSENCIA' },
+  { value: 'FALTA_INJUSTIFICADA', label: 'Falta Injustificada', tipo: 'AUSENCIA' },
+  { value: 'FALTA_MEDICA', label: 'Falta Médica', tipo: 'AUSENCIA' },
+  { value: 'FALTA_TOTAL', label: 'Falta Total', tipo: 'AUSENCIA' },
+  { value: 'FALTA_MEDICA_PARCIAL', label: 'Falta Médica Parcial', tipo: 'AUSENCIA' },
+  { value: 'FALTA_AULA', label: 'Falta de Aula (por hora/aula)', tipo: 'AUSENCIA' },
+  { value: 'LICENCA_SAUDE', label: 'Licença Saúde', tipo: 'AUSENCIA' },
+  { value: 'AUXILIO_DOENCA', label: 'Auxílio-Doença', tipo: 'AUSENCIA' },
 ];
 
 const precisaDataInicioFim = (subtipo: string) =>
-  subtipo === 'LICENCA_SAUDE' || subtipo === 'AUXILIO_DOENCA';
+  subtipo === 'LICENCA_SAUDE' || subtipo === 'AUXILIO_DOENCA' || subtipo === 'ORIENTACAO_TECNICA';
 const precisaQtdHoras = (subtipo: string) =>
   subtipo === 'FALTA_AULA';
 
@@ -32,10 +34,9 @@ export default function GestaoOrientacaoPage() {
   const [filtro, setFiltro] = useState<'TODOS' | 'OT' | 'AUSENCIA'>('TODOS');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [modalTipo, setModalTipo] = useState<'OT' | 'AUSENCIA'>('OT');
 
   const [form, setForm] = useState({
-    servidorId: '', tipo: 'OT', subtipo: '', data: '',
+    servidorId: '', subtipo: '', data: '',
     dataInicio: '', dataFim: '', quantidadeHoras: '',
     assunto: '', local: '', horaInicio: '', horaTermino: '',
     dataDoeOuEmail: '', observacao: '',
@@ -69,13 +70,10 @@ export default function GestaoOrientacaoPage() {
   }, []);
 
   useEffect(() => {
-    
     loadServidores();
   }, [loadServidores]);
 
-  // Reload registros whenever filter or server selection changes
   useEffect(() => {
-    
     loadRegistros(selectedServidorId, filtro);
   }, [selectedServidorId, filtro, loadRegistros]);
 
@@ -90,7 +88,7 @@ export default function GestaoOrientacaoPage() {
   const resetForm = () => {
     setForm({
       servidorId: selectedServidorId || '',
-      tipo: modalTipo, subtipo: '', data: '',
+      subtipo: '', data: '',
       dataInicio: '', dataFim: '', quantidadeHoras: '',
       assunto: '', local: '', horaInicio: '', horaTermino: '',
       dataDoeOuEmail: '', observacao: '',
@@ -108,10 +106,8 @@ export default function GestaoOrientacaoPage() {
   }, [form.dataInicio, form.dataFim]);
 
   const handleEdit = (r: any) => {
-    setModalTipo(r.tipo);
     setForm({
       servidorId: String(r.servidorId),
-      tipo: r.tipo,
       subtipo: r.subtipo || '',
       data: r.data || '',
       dataInicio: r.dataInicio || '',
@@ -134,21 +130,21 @@ export default function GestaoOrientacaoPage() {
       toast.error('Servidor e data são obrigatórios');
       return;
     }
-    if (form.tipo === 'OT' && !form.assunto) {
-      toast.error('Assunto é obrigatório para Orientação Técnica');
+    if (!form.subtipo) {
+      toast.error('Selecione o tipo');
       return;
     }
-    if (form.tipo === 'AUSENCIA' && !form.subtipo) {
-      toast.error('Selecione o tipo de ausência');
-      return;
-    }
-    if (form.tipo === 'AUSENCIA' && precisaDataInicioFim(form.subtipo)) {
+    if (precisaDataInicioFim(form.subtipo)) {
       if (!form.dataInicio || !form.dataFim) {
         toast.error('Data de início e fim são obrigatórias para este tipo');
         return;
       }
     }
-    if (form.tipo === 'AUSENCIA' && precisaQtdHoras(form.subtipo)) {
+    if (form.subtipo === 'ORIENTACAO_TECNICA' && !form.assunto) {
+      toast.error('Assunto é obrigatório para Orientação Técnica');
+      return;
+    }
+    if (precisaQtdHoras(form.subtipo)) {
       if (!form.quantidadeHoras || parseInt(form.quantidadeHoras) <= 0) {
         toast.error('Informe a quantidade de horas/aulas');
         return;
@@ -159,8 +155,11 @@ export default function GestaoOrientacaoPage() {
     try {
       const url = editingId ? `/api/orientacao-ausencia/${editingId}` : '/api/orientacao-ausencia';
       const method = editingId ? 'PUT' : 'POST';
-      const body: any = { ...form };
-      if (form.tipo === 'AUSENCIA' && precisaDataInicioFim(form.subtipo)) {
+      const body: any = {
+        ...form,
+        tipo: SUBTIPOS.find(s => s.value === form.subtipo)?.tipo || 'AUSENCIA',
+      };
+      if (precisaDataInicioFim(form.subtipo)) {
         body.quantidadeDias = calularDias();
       }
       const res = await fetch(url, {
@@ -188,21 +187,22 @@ export default function GestaoOrientacaoPage() {
   };
 
   const formatDate = (d: string | null) => { if (!d) return '—'; const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
-  const getSubtipoLabel = (s: string) => SUBTIPOS_AUSENCIA.find(x => x.value === s)?.label || s;
+  const getSubtipoLabel = (s: string) => SUBTIPOS.find(x => x.value === s)?.label || s;
+  const isOT = (s: string) => SUBTIPOS.find(x => x.value === s)?.tipo === 'OT';
 
-  const otCount = registros.filter(r => r.tipo === 'OT').length;
-  const ausenciaCount = registros.filter(r => r.tipo === 'AUSENCIA').length;
+  const otCount = registros.filter(r => isOT(r.subtipo)).length;
+  const ausenciaCount = registros.filter(r => !isOT(r.subtipo)).length;
 
   return (
     <DashboardLayout variant="gestao">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
           <span className="w-10 h-10 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-white" />
+            <UserX className="w-5 h-5 text-white" />
           </span>
-          Orientação Técnica e Ausência
+          O.T. e Ausências
         </h1>
-        <p className="text-slate-500 text-sm mt-1">Registro de participações em O.T. e ausências dos servidores</p>
+        <p className="text-slate-500 text-sm mt-1">Registro unificado de Orientações Técnicas e Ausências</p>
       </div>
 
       {/* Select Server */}
@@ -245,16 +245,10 @@ export default function GestaoOrientacaoPage() {
       {/* Actions */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-bold text-slate-800">Registros ({registros.length})</h3>
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => { setModalTipo('OT'); setForm(p => ({ ...p, servidorId: selectedServidorId || '', tipo: 'OT' })); setShowModal(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-xl hover:bg-orange-700 text-sm font-medium shadow-lg shadow-orange-600/20">
-            <Plus className="w-4 h-4" /> Nova O.T.
-          </button>
-          <button type="button" onClick={() => { setModalTipo('AUSENCIA'); setForm(p => ({ ...p, servidorId: selectedServidorId || '', tipo: 'AUSENCIA', subtipo: '' })); setShowModal(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 text-sm font-medium shadow-lg shadow-red-600/20">
-            <Plus className="w-4 h-4" /> Nova Ausência
-          </button>
-        </div>
+        <button type="button" onClick={() => { setForm(p => ({ ...p, servidorId: selectedServidorId || '' })); setShowModal(true); }}
+          className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-xl hover:bg-orange-700 text-sm font-medium shadow-lg shadow-orange-600/20">
+          <Plus className="w-4 h-4" /> Novo Registro
+        </button>
       </div>
 
       {/* Table */}
@@ -263,9 +257,8 @@ export default function GestaoOrientacaoPage() {
           <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 text-orange-500 animate-spin" /></div>
         ) : registros.length === 0 ? (
           <div className="text-center py-16">
-            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <UserX className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <p className="text-slate-500 font-medium">Nenhum registro encontrado</p>
-            <p className="text-slate-400 text-sm mt-1">Cadastre Orientações Técnicas ou Ausências</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -284,11 +277,10 @@ export default function GestaoOrientacaoPage() {
               <tbody className="divide-y divide-slate-100">
                 {registros.map(r => {
                   const servidor = servidores.find(s => s.id === r.servidorId);
-                  let detalhes = '';
-                  if (r.tipo === 'OT') {
-                    detalhes = r.assunto || '—';
+                  let detalhes = getSubtipoLabel(r.subtipo || '');
+                  if (isOT(r.subtipo)) {
+                    detalhes = r.assunto || detalhes;
                   } else {
-                    detalhes = getSubtipoLabel(r.subtipo || '');
                     if (r.quantidadeDias) detalhes += ` (${r.quantidadeDias} dias)`;
                     if (r.quantidadeHoras) detalhes += ` (${r.quantidadeHoras}h/aula)`;
                   }
@@ -296,10 +288,10 @@ export default function GestaoOrientacaoPage() {
                     <tr key={r.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
-                          r.tipo === 'OT' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                          isOT(r.subtipo) ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
                         }`}>
-                          {r.tipo === 'OT' ? <BookOpen className="w-3 h-3" /> : <UserX className="w-3 h-3" />}
-                          {r.tipo === 'OT' ? 'O.T.' : 'Ausência'}
+                          {isOT(r.subtipo) ? <BookOpen className="w-3 h-3" /> : <UserX className="w-3 h-3" />}
+                          {isOT(r.subtipo) ? 'O.T.' : 'Ausência'}
                         </span>
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-800">{servidor?.nome || '—'}</td>
@@ -326,16 +318,14 @@ export default function GestaoOrientacaoPage() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal Unificado */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className={`sticky top-0 px-6 py-4 border-b flex items-center justify-between rounded-t-2xl ${
-              modalTipo === 'OT' ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200' : 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200'
-            }`}>
+            <div className="sticky top-0 px-6 py-4 border-b flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                {modalTipo === 'OT' ? <BookOpen className="w-5 h-5 text-orange-600" /> : <UserX className="w-5 h-5 text-red-600" />}
-                {editingId ? 'Editar' : 'Nova'} {modalTipo === 'OT' ? 'Orientação Técnica' : 'Ausência'}
+                <UserX className="w-5 h-5 text-orange-600" />
+                {editingId ? 'Editar' : 'Novo'} Registro
               </h2>
               <button type="button" onClick={resetForm} className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><X className="w-4 h-4" /></button>
             </div>
@@ -353,8 +343,24 @@ export default function GestaoOrientacaoPage() {
                 <input type="date" required value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })}
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo *</label>
+                <select required value={form.subtipo} onChange={(e) => {
+                  setForm(prev => ({ ...prev, subtipo: e.target.value, dataInicio: '', dataFim: '', quantidadeHoras: '' }));
+                }}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white">
+                  <option value="">Selecione o tipo</option>
+                  <optgroup label="Orientação Técnica">
+                    <option value="ORIENTACAO_TECNICA">Orientação Técnica</option>
+                  </optgroup>
+                  <optgroup label="Ausências">
+                    {SUBTIPOS.filter(s => s.tipo === 'AUSENCIA').map(s => (<option key={s.value} value={s.value}>{s.label}</option>))}
+                  </optgroup>
+                </select>
+              </div>
 
-              {modalTipo === 'OT' && (
+              {/* Campos para Orientação Técnica */}
+              {form.subtipo === 'ORIENTACAO_TECNICA' && (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Assunto *</label>
@@ -370,60 +376,47 @@ export default function GestaoOrientacaoPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Hora de Início</label>
-                      <input type="time" value={form.horaInicio} onChange={(e) => setForm({ ...form, horaInicio: e.target.value })}
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Data Início</label>
+                      <input type="date" value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Hora de Término</label>
-                      <input type="time" value={form.horaTermino} onChange={(e) => setForm({ ...form, horaTermino: e.target.value })}
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Data Fim</label>
+                      <input type="date" value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
                     </div>
                   </div>
                 </>
               )}
 
-              {modalTipo === 'AUSENCIA' && (
+              {/* Campos para Falta de Aula */}
+              {precisaQtdHoras(form.subtipo) && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Quantidade de Hora/Aula *</label>
+                  <input type="number" min="1" required value={form.quantidadeHoras} onChange={(e) => setForm({ ...form, quantidadeHoras: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
+                </div>
+              )}
+
+              {/* Campos para Licença/Auxílio */}
+              {precisaDataInicioFim(form.subtipo) && form.subtipo !== 'ORIENTACAO_TECNICA' && (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Ausência *</label>
-                    <select required value={form.subtipo} onChange={(e) => {
-                      setForm(prev => ({ ...prev, subtipo: e.target.value, dataInicio: '', dataFim: '', quantidadeHoras: '' }));
-                    }}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm bg-white">
-                      <option value="">Selecione o tipo</option>
-                      {SUBTIPOS_AUSENCIA.map(s => (<option key={s.value} value={s.value}>{s.label}</option>))}
-                    </select>
-                  </div>
-
-                  {precisaQtdHoras(form.subtipo) && (
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Quantidade de Hora/Aula *</label>
-                      <input type="number" min="1" required value={form.quantidadeHoras} onChange={(e) => setForm({ ...form, quantidadeHoras: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm" />
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Data de Início *</label>
+                      <input type="date" required value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
                     </div>
-                  )}
-
-                  {precisaDataInicioFim(form.subtipo) && (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Data de Início *</label>
-                          <input type="date" required value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })}
-                            className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Data Final *</label>
-                          <input type="date" required value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })}
-                            className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm" />
-                        </div>
-                      </div>
-                      {form.dataInicio && form.dataFim && (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700 font-medium text-center">
-                          {formatDate(form.dataInicio)} até {formatDate(form.dataFim)} = <strong>{calularDias()} dias</strong>
-                        </div>
-                      )}
-                    </>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Data Final *</label>
+                      <input type="date" required value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
+                    </div>
+                  </div>
+                  {form.dataInicio && form.dataFim && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-sm text-orange-700 font-medium text-center">
+                      {formatDate(form.dataInicio)} até {formatDate(form.dataFim)} = <strong>{calularDias()} dias</strong>
+                    </div>
                   )}
                 </>
               )}
@@ -443,9 +436,7 @@ export default function GestaoOrientacaoPage() {
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button type="button" onClick={resetForm} className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200">Cancelar</button>
-                <button type="submit" className={`px-5 py-2.5 text-sm font-medium text-white rounded-xl shadow-lg ${
-                  modalTipo === 'OT' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/20' : 'bg-red-600 hover:bg-red-700 shadow-red-600/20'
-                }`}>
+                <button type="submit" className="px-5 py-2.5 text-sm font-medium text-white bg-orange-600 rounded-xl hover:bg-orange-700 shadow-lg shadow-orange-600/20">
                   {editingId ? 'Salvar' : 'Cadastrar'}
                 </button>
               </div>

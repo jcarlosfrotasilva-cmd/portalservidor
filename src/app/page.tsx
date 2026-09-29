@@ -33,23 +33,23 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-hero overflow-hidden relative">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       {/* Grid Pattern */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.05]"
         style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px)',
           backgroundSize: '60px 60px',
         }}
       />
 
       <div className="relative z-10">
         {/* Header */}
-        <header className="border-b border-white/10 backdrop-blur-sm">
+        <header className="border-b border-white/10 backdrop-blur-sm bg-slate-900/50">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-gradient-brand flex items-center justify-center shadow-lg shadow-brand-500/30">
@@ -57,12 +57,12 @@ export default function LandingPage() {
               </div>
               <div>
                 <h1 className="text-white font-bold text-lg">Portal do Servidor</h1>
-                <p className="text-slate-400 text-sm">EE Profª Marlene Frattini</p>
+                <p className="text-slate-300 text-sm">EE Profª Marlene Frattini</p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/10 rounded-xl border border-white/20">
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-slate-400 text-sm">Sistema Online</span>
+              <span className="text-slate-200 text-sm font-medium">Sistema Online</span>
             </div>
           </div>
         </header>
@@ -70,19 +70,19 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="max-w-7xl mx-auto px-6 py-16 lg:py-24">
           <div className={`text-center mb-16 transition-all duration-700 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-500/20 border border-brand-500/30 rounded-full mb-6">
-              <Zap className="w-4 h-4 text-brand-400" />
-              <span className="text-brand-300 text-sm font-medium">Sistema Integrado de Gestão de Pessoas</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-500/30 border border-brand-400/50 rounded-full mb-6 shadow-lg shadow-brand-500/20">
+              <Zap className="w-4 h-4 text-yellow-300" />
+              <span className="text-brand-100 text-sm font-semibold">Sistema Integrado de Gestão de Pessoas</span>
             </div>
 
-            <h2 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+            <h2 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
               Bem-vindo ao{' '}
-              <span className="bg-gradient-to-r from-brand-400 via-purple-400 to-accent-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-brand-300 via-purple-300 to-accent-300 bg-clip-text text-transparent">
                 Portal do Servidor
               </span>
             </h2>
 
-            <p className="text-slate-400 text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed">
+            <p className="text-slate-200 text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed drop-shadow">
               Acesse sua vida funcional completa, visualize vantagens, gere relatórios e mantenha-se conectado com a gestão da escola.
             </p>
           </div>
@@ -92,21 +92,26 @@ export default function LandingPage() {
             {/* Servidor Card */}
             <Link
               href="/servidor"
-              className={`group relative block p-8 rounded-3xl glass card-hover transition-all duration-700 ${
+              className={`group relative block p-8 rounded-3xl card-hover transition-all duration-700 ${
                 loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
-              style={{ transitionDelay: '0.2s' }}
+              style={{ 
+                transitionDelay: '0.2s',
+                background: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.15)'
+              }}
             >
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-accent-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-accent-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-accent flex items-center justify-center mb-6 shadow-lg shadow-accent-500/20 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-accent flex items-center justify-center mb-6 shadow-xl shadow-accent-500/40 group-hover:scale-110 transition-transform duration-300">
                   <Users className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">Sou Servidor</h3>
-                <p className="text-slate-300 mb-6 leading-relaxed">
+                <h3 className="text-2xl font-bold text-white mb-3 drop-shadow">Sou Servidor</h3>
+                <p className="text-slate-100 mb-6 leading-relaxed">
                   Acesse sua vida funcional completa, visualize suas vantagens e gere relatórios profissionais.
                 </p>
-                <div className="flex items-center gap-2 text-accent-400 font-medium group-hover:gap-4 transition-all">
+                <div className="flex items-center gap-2 text-accent-300 font-semibold group-hover:gap-4 transition-all">
                   <span>Acessar Portal</span>
                   <ArrowRight className="w-5 h-5" />
                 </div>
@@ -116,21 +121,26 @@ export default function LandingPage() {
             {/* Gestão Card */}
             <Link
               href="/gestao"
-              className={`group relative block p-8 rounded-3xl glass card-hover transition-all duration-700 ${
+              className={`group relative block p-8 rounded-3xl card-hover transition-all duration-700 ${
                 loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
-              style={{ transitionDelay: '0.4s' }}
+              style={{ 
+                transitionDelay: '0.4s',
+                background: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.15)'
+              }}
             >
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-brand-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-brand-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-brand flex items-center justify-center mb-6 shadow-lg shadow-brand-500/20 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-brand flex items-center justify-center mb-6 shadow-xl shadow-brand-500/40 group-hover:scale-110 transition-transform duration-300">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">Sou Gestor</h3>
-                <p className="text-slate-300 mb-6 leading-relaxed">
+                <h3 className="text-2xl font-bold text-white mb-3 drop-shadow">Sou Gestor</h3>
+                <p className="text-slate-100 mb-6 leading-relaxed">
                   Gerencie servidores, cadastre vantagens, faça upload de dados e administre o sistema completo.
                 </p>
-                <div className="flex items-center gap-2 text-brand-400 font-medium group-hover:gap-4 transition-all">
+                <div className="flex items-center gap-2 text-brand-300 font-semibold group-hover:gap-4 transition-all">
                   <span>Acessar Painel</span>
                   <ArrowRight className="w-5 h-5" />
                 </div>
@@ -145,26 +155,30 @@ export default function LandingPage() {
             {features.map((feature, i) => (
               <div
                 key={feature.title}
-                className={`p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-500 ${
+                className={`p-6 rounded-2xl border border-white/15 hover:bg-white/10 transition-all duration-500 ${
                   loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
-                style={{ transitionDelay: `${0.6 + i * 0.1}s` }}
+                style={{ 
+                  transitionDelay: `${0.6 + i * 0.1}s`,
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  backdropFilter: 'blur(12px)'
+                }}
               >
-                <feature.icon className="w-8 h-8 text-brand-400 mb-4" />
-                <h4 className="text-white font-semibold mb-2">{feature.title}</h4>
-                <p className="text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
+                <feature.icon className="w-8 h-8 text-brand-300 mb-4 drop-shadow" />
+                <h4 className="text-white font-semibold mb-2 drop-shadow">{feature.title}</h4>
+                <p className="text-slate-200 text-sm leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-white/10">
+        <footer className="border-t border-white/10 bg-slate-900/50">
           <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-slate-500 text-sm">
+            <p className="text-slate-300 text-sm">
               © 2025 EE Profª Marlene Frattini — Portal do Servidor
             </p>
-            <div className="flex items-center gap-2 text-slate-500 text-sm">
+            <div className="flex items-center gap-2 text-slate-300 text-sm">
               <ChevronRight className="w-4 h-4" />
               <span>Desenvolvido com excelência</span>
             </div>

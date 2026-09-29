@@ -3,6 +3,14 @@ import { db } from '@/db';
 import { ats } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
+// Calcula próxima vigência: data da vigência + 1 dia + 1824 dias = 1825 dias contínuos
+function calcularProximaVigencia(dataVigencia: string): string {
+  const data = new Date(dataVigencia + 'T00:00:00');
+  data.setDate(data.getDate() + 1); // 1 dia após
+  data.setDate(data.getDate() + 1824); // +1824 dias = total 1825 dias
+  return data.toISOString().split('T')[0];
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -10,15 +18,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-
-    // Recalcular próxima vigência
-    let proximaVigencia: string | null = null;
-    if (body.dataVigencia) {
-      const dataVigencia = new Date(body.dataVigencia + 'T00:00:00');
-      const proxima = new Date(dataVigencia);
-      proxima.setDate(proxima.getDate() + 1825);
-      proximaVigencia = proxima.toISOString().split('T')[0];
-    }
+    const proximaVigencia = body.dataVigencia ? calcularProximaVigencia(body.dataVigencia) : null;
 
     const data = await db
       .update(ats)

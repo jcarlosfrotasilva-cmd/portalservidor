@@ -7,15 +7,16 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-const SUBTIPOS_AUSENCIA = [
-  { value: 'FALTA_JUSTIFICADA', label: 'Falta Justificada' },
-  { value: 'FALTA_INJUSTIFICADA', label: 'Falta Injustificada' },
-  { value: 'FALTA_MEDICA', label: 'Falta Médica' },
-  { value: 'FALTA_TOTAL', label: 'Falta Total' },
-  { value: 'FALTA_MEDICA_PARCIAL', label: 'Falta Médica Parcial' },
+const SUBTIPOS = [
+  { value: 'ORIENTACAO_TECNICA', label: 'Orientação Técnica', tipo: 'OT' },
+  { value: 'FALTA_JUSTIFICADA', label: 'Falta Justificada', tipo: 'AUSENCIA' },
+  { value: 'FALTA_INJUSTIFICADA', label: 'Falta Injustificada', tipo: 'AUSENCIA' },
+  { value: 'FALTA_MEDICA', label: 'Falta Médica', tipo: 'AUSENCIA' },
+  { value: 'FALTA_TOTAL', label: 'Falta Total', tipo: 'AUSENCIA' },
+  { value: 'FALTA_MEDICA_PARCIAL', label: 'Falta Médica Parcial', tipo: 'AUSENCIA' },
   { value: 'FALTA_AULA', label: 'Falta de Aula' },
-  { value: 'LICENCA_SAUDE', label: 'Licença Saúde' },
-  { value: 'AUXILIO_DOENCA', label: 'Auxílio-Doença' },
+  { value: 'LICENCA_SAUDE', label: 'Licença Saúde', tipo: 'AUSENCIA' },
+  { value: 'AUXILIO_DOENCA', label: 'Auxílio-Doença', tipo: 'AUSENCIA' },
 ];
 
 export default function ServidorOrientacaoPage() {
@@ -68,10 +69,11 @@ export default function ServidorOrientacaoPage() {
   }, [filtro, servidor, loadRegistros]);
 
   const formatDate = (d: string | null) => { if (!d) return '—'; const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
-  const getSubtipoLabel = (s: string) => SUBTIPOS_AUSENCIA.find(x => x.value === s)?.label || s;
+  const getSubtipoLabel = (s: string) => SUBTIPOS.find(x => x.value === s)?.label || s;
+  const isOT = (s: string) => SUBTIPOS.find(x => x.value === s)?.tipo === 'OT';
 
-  const otCount = registros.filter(r => r.tipo === 'OT').length;
-  const ausenciaCount = registros.filter(r => r.tipo === 'AUSENCIA').length;
+  const otCount = registros.filter(r => isOT(r.subtipo)).length;
+  const ausenciaCount = registros.filter(r => !isOT(r.subtipo)).length;
 
   if (loading) {
     return (
@@ -150,23 +152,23 @@ export default function ServidorOrientacaoPage() {
                 <div key={r.id} className={`px-6 py-4 ${r.tipo === 'OT' ? 'bg-gradient-to-r from-orange-50/50 to-transparent' : 'bg-gradient-to-r from-red-50/50 to-transparent'}`}>
                   <div className="flex items-start gap-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      r.tipo === 'OT' ? 'bg-orange-100' : 'bg-red-100'
+                      isOT(r.subtipo) ? 'bg-orange-100' : 'bg-red-100'
                     }`}>
-                      {r.tipo === 'OT' ? <BookOpen className="w-6 h-6 text-orange-600" /> : <UserX className="w-6 h-6 text-red-600" />}
+                      {isOT(r.subtipo) ? <BookOpen className="w-6 h-6 text-orange-600" /> : <UserX className="w-6 h-6 text-red-600" />}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1 flex-wrap">
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          r.tipo === 'OT' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                          isOT(r.subtipo) ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
                         }`}>
-                          {r.tipo === 'OT' ? 'Orientação Técnica' : getSubtipoLabel(r.subtipo || 'AUSENCIA')}
+                          {isOT(r.subtipo) ? 'Orientação Técnica' : getSubtipoLabel(r.subtipo || '')}
                         </span>
                         <span className="flex items-center gap-1 text-sm text-slate-600">
                           <Calendar className="w-4 h-4" /> {formatDate(r.data)}
                         </span>
                       </div>
 
-                      {r.tipo === 'OT' && r.assunto && <p className="font-semibold text-slate-800 text-sm">{r.assunto}</p>}
+                      {isOT(r.subtipo) && r.assunto && <p className="font-semibold text-slate-800 text-sm">{r.assunto}</p>}
 
                       <div className="flex items-center gap-4 text-xs text-slate-400 mt-1 flex-wrap">
                         {r.local && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {r.local}</span>}

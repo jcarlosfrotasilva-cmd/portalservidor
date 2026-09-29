@@ -43,21 +43,14 @@ export async function GET(request: Request) {
         let servidoresData: any[] = [];
         if (servidorIds.length > 0) {
           servidoresData = await db
-            .select({ id: servidores.id, nome: servidores.nome, cargo: servidores.cargo })
+            .select({ id: servidores.id, nome: servidores.nome, cargo: servidores.cargo, categoria: servidores.categoria })
             .from(servidores)
             .where(or(...servidorIds.map(id => eq(servidores.id, id))));
         }
         const servidorMap: Record<number, any> = {};
         servidoresData.forEach(s => { servidorMap[s.id] = s; });
 
-        // Build detailed records with server names
-        const registrosDetalhados = mesRegistros.map(r => ({
-          ...r,
-          nomeServidor: servidorMap[r.servidorId]?.nome || 'Desconhecido',
-          cargo: servidorMap[r.servidorId]?.cargo || '',
-        }));
-
-        // Summary by server
+        // Agrupar por servidor com resumo + detalhes
         const porServidor: Record<string, any> = {};
         for (const reg of mesRegistros) {
           const key = reg.servidorId;
@@ -66,22 +59,28 @@ export async function GET(request: Request) {
               servidorId: reg.servidorId,
               nomeServidor: servidorMap[reg.servidorId]?.nome || 'Desconhecido',
               cargo: servidorMap[reg.servidorId]?.cargo || '',
+              categoria: servidorMap[reg.servidorId]?.categoria || '',
               ot: 0,
               ausencia: 0,
+              registros: [],
             };
           }
-          if (reg.tipo === 'OT') porServidor[key].ot++;
+          if (reg.subtipo === 'ORIENTACAO_TECNICA') porServidor[key].ot++;
           else porServidor[key].ausencia++;
+          porServidor[key].registros.push(reg);
         }
-        const resumo = Object.values(porServidor)
+
+        // Ordenar servidores alfabeticamente
+        const porServidorArray = Object.values(porServidor)
           .sort((a, b) => a.nomeServidor.localeCompare(b.nomeServidor))
           .map(s => ({ ...s, total: s.ot + s.ausencia }));
 
+        const totalGeral = mesRegistros.length;
+
         return NextResponse.json({
           mes,
-          total: mesRegistros.length,
-          registros: registrosDetalhados,
-          resumo,
+          total: totalGeral,
+          porServidor: porServidorArray,
         });
       }
       default:

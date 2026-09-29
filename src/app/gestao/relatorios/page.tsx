@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 type RelatorioTipo = 'geral' | 'por-cargo' | 'por-categoria' | 'efetivo-act' | 'ot-ausencia-mensal';
 
 const SUBTIPOS_AUSENCIA: Record<string, string> = {
+  ORIENTACAO_TECNICA: 'O.T.',
   FALTA_JUSTIFICADA: 'Falta Justificada',
   FALTA_INJUSTIFICADA: 'Falta Injustificada',
   FALTA_MEDICA: 'Falta Médica',
@@ -158,7 +159,7 @@ export default function RelatoriosPage() {
           {loading ? (
             <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 text-slate-400 animate-spin" /></div>
           ) : tipoRelatorio === 'ot-ausencia-mensal' ? (
-            /* Relatório O.T. e Ausências Mensal */
+            /* Relatório O.T. e Ausências Mensal - Agrupado por Servidor */
             dadosMensal ? (
               <div>
                 <p className="text-sm text-slate-600 mb-4">
@@ -168,89 +169,99 @@ export default function RelatoriosPage() {
                 {dadosMensal.total === 0 ? (
                   <p className="text-sm text-slate-500 py-8 text-center">Nenhum registro no mês selecionado.</p>
                 ) : (
-                  <>
-                    {/* Resumo por Servidor */}
-                    <h4 className="font-bold text-slate-800 text-sm mb-2">Resumo por Servidor</h4>
-                    <table className="w-full text-sm border-collapse mb-8">
-                      <thead>
-                        <tr className="border-b-2 border-slate-800">
-                          <th className="text-left py-2 px-3 font-bold text-slate-800">Nº</th>
-                          <th className="text-left py-2 px-3 font-bold text-slate-800">Servidor</th>
-                          <th className="text-left py-2 px-3 font-bold text-slate-800">Cargo</th>
-                          <th className="text-center py-2 px-3 font-bold text-slate-800">O.T.</th>
-                          <th className="text-center py-2 px-3 font-bold text-slate-800">Ausências</th>
-                          <th className="text-center py-2 px-3 font-bold text-slate-800">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dadosMensal.resumo?.map((item: any, i: number) => (
-                          <tr key={item.servidorId} className="border-b border-slate-200">
-                            <td className="py-2 px-3 text-slate-600">{i + 1}</td>
-                            <td className="py-2 px-3 font-medium text-slate-900">{item.nomeServidor}</td>
-                            <td className="py-2 px-3 text-slate-600">{item.cargo || '—'}</td>
-                            <td className="py-2 px-3 text-center font-medium">{item.ot}</td>
-                            <td className="py-2 px-3 text-center font-medium">{item.ausencia}</td>
-                            <td className="py-2 px-3 text-center font-bold text-slate-900">{item.total}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="border-t-2 border-slate-800 bg-slate-50">
-                          <td colSpan={3} className="py-2 px-3 font-bold text-slate-800">TOTAL GERAL</td>
-                          <td className="py-2 px-3 text-center font-bold">
-                            {dadosMensal.resumo?.reduce((a: number, b: any) => a + b.ot, 0) || 0}
-                          </td>
-                          <td className="py-2 px-3 text-center font-bold">
-                            {dadosMensal.resumo?.reduce((a: number, b: any) => a + b.ausencia, 0) || 0}
-                          </td>
-                          <td className="py-2 px-3 text-center font-bold text-slate-900">
-                            {dadosMensal.total}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
+                  <div className="space-y-8">
+                    {dadosMensal.porServidor?.map((serv: any, servIdx: number) => (
+                      <div key={serv.servidorId} className="border-t-2 border-slate-300 pt-4">
+                        {/* Cabeçalho do Servidor */}
+                        <div className="mb-3">
+                          <h4 className="font-bold text-slate-900 text-base">
+                            {servIdx + 1}. {serv.nomeServidor}
+                          </h4>
+                          <p className="text-xs text-slate-600">
+                            Cargo: {serv.cargo || '—'} • Categoria: {serv.categoria || '—'}
+                          </p>
+                        </div>
 
-                    {/* Detalhamento por Registro */}
-                    <h4 className="font-bold text-slate-800 text-sm mb-2">Detalhamento por Registro</h4>
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="border-b-2 border-slate-800">
-                          <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Nº</th>
-                          <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Data</th>
-                          <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Tipo</th>
-                          <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Assunto / Detalhes</th>
-                          <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Local</th>
-                          <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">Horário</th>
-                          <th className="text-left py-2 px-2 font-bold text-slate-800 text-xs">DOE/E-mail</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dadosMensal.registros?.map((r: any, i: number) => (
-                          <tr key={r.id} className="border-b border-slate-200">
-                            <td className="py-1.5 px-2 text-slate-500 text-xs">{i + 1}</td>
-                            <td className="py-1.5 px-2 text-slate-600 text-xs">{formatDate(r.data)}</td>
-                            <td className="py-1.5 px-2 text-xs">
-                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${r.tipo === 'OT' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
-                                {r.tipo === 'OT' ? 'O.T.' : SUBTIPOS_AUSENCIA[r.subtipo] || 'Ausência'}
-                              </span>
+                        {/* Resumo do Servidor */}
+                        <div className="bg-slate-50 rounded-lg p-3 mb-3 grid grid-cols-3 gap-2 text-center text-sm">
+                          <div>
+                            <p className="text-xs text-slate-500">O.T.</p>
+                            <p className="font-bold text-orange-600">{serv.ot}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Ausências</p>
+                            <p className="font-bold text-red-600">{serv.ausencia}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Total</p>
+                            <p className="font-bold text-slate-900">{serv.total}</p>
+                          </div>
+                        </div>
+
+                        {/* Detalhamento dos Registros */}
+                        <table className="w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="border-b border-slate-400">
+                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Nº</th>
+                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Data</th>
+                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Tipo</th>
+                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Assunto / Detalhes</th>
+                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Local</th>
+                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">Horário</th>
+                              <th className="text-left py-1.5 px-2 font-semibold text-slate-700 text-xs">DOE/E-mail</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {serv.registros?.map((r: any, i: number) => (
+                              <tr key={r.id} className="border-b border-slate-200">
+                                <td className="py-1.5 px-2 text-slate-500 text-xs">{i + 1}</td>
+                                <td className="py-1.5 px-2 text-slate-600 text-xs">{formatDate(r.data)}</td>
+                                <td className="py-1.5 px-2 text-xs">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                    r.subtipo === 'ORIENTACAO_TECNICA' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                                  }`}>
+                                    {r.subtipo === 'ORIENTACAO_TECNICA' ? 'O.T.' : SUBTIPOS_AUSENCIA[r.subtipo] || 'Ausência'}
+                                  </span>
+                                </td>
+                                <td className="py-1.5 px-2 text-slate-600 text-xs max-w-32 truncate">
+                                  {r.subtipo === 'ORIENTACAO_TECNICA' ? r.assunto : (
+                                    <>
+                                      {r.quantidadeDias && `${r.quantidadeDias} dias `}
+                                      {r.quantidadeHoras && `${r.quantidadeHoras}h/aula `}
+                                      {r.dataInicio && r.dataFim && `${formatDate(r.dataInicio)} → ${formatDate(r.dataFim)}`}
+                                    </>
+                                  )}
+                                </td>
+                                <td className="py-1.5 px-2 text-slate-600 text-xs">{r.local || '—'}</td>
+                                <td className="py-1.5 px-2 text-slate-600 text-xs">{r.horaInicio && r.horaTermino ? `${r.horaInicio}-${r.horaTermino}` : '—'}</td>
+                                <td className="py-1.5 px-2 text-slate-600 text-xs">{r.dataDoeOuEmail || '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ))}
+
+                    {/* Total Geral no final */}
+                    <div className="border-t-2 border-slate-800 pt-4 mt-6">
+                      <table className="w-full text-sm">
+                        <tfoot>
+                          <tr className="bg-slate-50">
+                            <td colSpan={2} className="py-2 px-3 font-bold text-slate-800 text-right">TOTAL GERAL:</td>
+                            <td className="py-2 px-3 text-center font-bold text-orange-600">
+                              O.T.: {dadosMensal.porServidor?.reduce((a: number, b: any) => a + b.ot, 0) || 0}
                             </td>
-                            <td className="py-1.5 px-2 text-slate-600 text-xs max-w-32 truncate">
-                              {r.tipo === 'OT' ? r.assunto : (
-                                <>
-                                  {r.quantidadeDias && `${r.quantidadeDias} dias `}
-                                  {r.quantidadeHoras && `${r.quantidadeHoras}h/aula `}
-                                  {r.dataInicio && r.dataFim && `${formatDate(r.dataInicio)} → ${formatDate(r.dataFim)}`}
-                                </>
-                              )}
+                            <td className="py-2 px-3 text-center font-bold text-red-600">
+                              Ausências: {dadosMensal.porServidor?.reduce((a: number, b: any) => a + b.ausencia, 0) || 0}
                             </td>
-                            <td className="py-1.5 px-2 text-slate-600 text-xs">{r.local || '—'}</td>
-                            <td className="py-1.5 px-2 text-slate-600 text-xs">{r.horaInicio && r.horaTermino ? `${r.horaInicio}-${r.horaTermino}` : '—'}</td>
-                            <td className="py-1.5 px-2 text-slate-600 text-xs">{r.dataDoeOuEmail || '—'}</td>
+                            <td className="py-2 px-3 text-center font-bold text-slate-900">
+                              Total: {dadosMensal.total}
+                            </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (

@@ -1,12 +1,19 @@
 /**
  * API de cálculo inteligente de ATS
- * Retorna o último ATS do servidor e calcula o próximo quinquênio
- * Fórmula: Último ATS data da vigência + 1825 dias = próximo ATS
+ * Regra: data da vigência + 1 dia + 1824 dias = próximo ATS
+ * Exemplo: vigência 11/04/2020 → começa contar em 12/04/2020 → +1824 dias → 10/04/2025
  */
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { ats } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
+
+function calcularProximaVigencia(dataVigencia: string): string {
+  const data = new Date(dataVigencia + 'T00:00:00');
+  data.setDate(data.getDate() + 1); // 1 dia após
+  data.setDate(data.getDate() + 1824); // +1824 dias = total 1825 dias
+  return data.toISOString().split('T')[0];
+}
 
 export async function GET(request: Request) {
   try {
@@ -17,7 +24,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'servidorId é obrigatório' }, { status: 400 });
     }
 
-    // Buscar todos os ATS do servidor ordenados por número
     const allAts = await db
       .select()
       .from(ats)
@@ -26,28 +32,19 @@ export async function GET(request: Request) {
 
     const ultimoAts = allAts[0] || null;
 
-    // Calcular próximo quinquênio
     let proximoQuinquenio = null;
     let dataProximoAts = null;
     let descricaoProximo = null;
 
     if (ultimoAts) {
       const proxQuinNum = ultimoAts.numeroQuinquenio + 1;
-
       if (proxQuinNum <= 10) {
         proximoQuinquenio = proxQuinNum;
-
-        // Calcular data: dataVigencia + 1825 dias
-        const dataVigencia = new Date(ultimoAts.dataVigencia + 'T00:00:00');
-        const proximaData = new Date(dataVigencia);
-        proximaData.setDate(proximaData.getDate() + 1825);
-        dataProximoAts = proximaData.toISOString().split('T')[0];
-
+        dataProximoAts = calcularProximaVigencia(ultimoAts.dataVigencia);
         const ordinais = ['', '1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º'];
         descricaoProximo = `${ordinais[proxQuinNum]} Quinquênio`;
       }
     } else {
-      // Sem ATS cadastrado - próximo seria o 1º
       proximoQuinquenio = 1;
       descricaoProximo = '1º Quinquênio';
     }
