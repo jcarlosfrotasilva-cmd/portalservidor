@@ -22,9 +22,11 @@ const SUBTIPOS = [
 ];
 
 const precisaDataInicioFim = (subtipo: string) =>
-  subtipo === 'LICENCA_SAUDE' || subtipo === 'AUXILIO_DOENCA' || subtipo === 'ORIENTACAO_TECNICA';
+  subtipo === 'LICENCA_SAUDE' || subtipo === 'AUXILIO_DOENCA';
 const precisaQtdHoras = (subtipo: string) =>
   subtipo === 'FALTA_AULA';
+const precisaHoraInicioTermino = (subtipo: string) =>
+  subtipo === 'ORIENTACAO_TECNICA';
 
 export default function GestaoOrientacaoPage() {
   const [servidores, setServidores] = useState<any[]>([]);
@@ -140,9 +142,15 @@ export default function GestaoOrientacaoPage() {
         return;
       }
     }
-    if (form.subtipo === 'ORIENTACAO_TECNICA' && !form.assunto) {
-      toast.error('Assunto é obrigatório para Orientação Técnica');
-      return;
+    if (form.subtipo === 'ORIENTACAO_TECNICA') {
+      if (!form.assunto) {
+        toast.error('Assunto é obrigatório para Orientação Técnica');
+        return;
+      }
+      if (!form.horaInicio || !form.horaTermino) {
+        toast.error('Hora de início e hora de término são obrigatórias para Orientação Técnica');
+        return;
+      }
     }
     if (precisaQtdHoras(form.subtipo)) {
       if (!form.quantidadeHoras || parseInt(form.quantidadeHoras) <= 0) {
@@ -359,7 +367,7 @@ export default function GestaoOrientacaoPage() {
                 </select>
               </div>
 
-              {/* Campos para Orientação Técnica */}
+              {/* Campos para Orientação Técnica: Assunto e Local */}
               {form.subtipo === 'ORIENTACAO_TECNICA' && (
                 <>
                   <div>
@@ -374,18 +382,6 @@ export default function GestaoOrientacaoPage() {
                       placeholder="Ex: Escola sede, Sala de professores"
                       className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Data Início</label>
-                      <input type="date" value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Data Fim</label>
-                      <input type="date" value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
-                    </div>
-                  </div>
                 </>
               )}
 
@@ -398,8 +394,8 @@ export default function GestaoOrientacaoPage() {
                 </div>
               )}
 
-              {/* Campos para Licença/Auxílio */}
-              {precisaDataInicioFim(form.subtipo) && form.subtipo !== 'ORIENTACAO_TECNICA' && (
+              {/* Campos para Licença Saúde / Auxílio-Doença (período) */}
+              {precisaDataInicioFim(form.subtipo) && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -419,6 +415,28 @@ export default function GestaoOrientacaoPage() {
                     </div>
                   )}
                 </>
+              )}
+
+              {/* Campos para Orientação Técnica (hora início e hora término) */}
+              {precisaHoraInicioTermino(form.subtipo) && (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                  <p className="text-sm font-bold text-orange-800 mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Horário da Orientação Técnica
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Hora de Início *</label>
+                      <input type="time" required value={form.horaInicio} onChange={(e) => setForm({ ...form, horaInicio: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Hora de Término *</label>
+                      <input type="time" required value={form.horaTermino} onChange={(e) => setForm({ ...form, horaTermino: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white" />
+                    </div>
+                  </div>
+                </div>
               )}
 
               <div>
