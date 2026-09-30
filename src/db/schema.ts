@@ -58,11 +58,18 @@ export const ats = pgTable("ats", {
 export const historicoFuncional = pgTable("historico_funcional", {
   id: serial("id").primaryKey().notNull(),
   servidorId: integer("servidor_id").notNull(),
+  categoria: varchar("categoria", { length: 50 }).notNull(), // POSSE, PROGRESSAO, LICENCA, AFASTAMENTO, EVOLUCAO, ATS, LOTACAO, CAPACITACAO, FALTAS, OT, OUTROS
   tipo: varchar("tipo", { length: 100 }).notNull(),
   descricao: text("descricao").notNull(),
   data: date("data").notNull(),
-  documentoReferencia: varchar("documento_referencia", { length: 100 }),
+  dataFim: date("data_fim"),
+  numeroDocumento: varchar("numero_documento", { length: 100 }),
+  dataDocumento: date("data_documento"),
+  observacoes: text("observacoes"),
+  registradoPor: varchar("registrado_por", { length: 100 }),
+  dataRegistro: timestamp("data_registro").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // ========== EXPORT TYPES ==========
