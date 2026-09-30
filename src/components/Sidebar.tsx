@@ -31,6 +31,7 @@ export default function Sidebar({ variant }: SidebarProps) {
     { icon: FileText, label: 'Requerimentos', href: '/gestao/requerimentos' },
     { icon: Printer, label: 'Relatórios', href: '/gestao/relatorios' },
     { icon: History, label: 'Histórico', href: '/gestao/historico' },
+    { icon: FileText, label: 'Ficha Funcional', href: '/gestao/ficha-funcional' },
     { icon: Settings, label: 'Configurações', href: '/gestao/Configuracoes' },
   ];
 
@@ -43,6 +44,7 @@ export default function Sidebar({ variant }: SidebarProps) {
     { icon: BookOpen, label: 'O.T. e Ausência', href: '/servidor/orientacao-ausencia' },
     { icon: FileText, label: 'Requerimentos', href: '/servidor/requerimentos' },
     { icon: History, label: 'Histórico', href: '/servidor/historico' },
+    { icon: FileText, label: 'Ficha Funcional', href: '/servidor/ficha-funcional' },
   ];
 
   const items = variant === 'gestao' ? gestaoItems : servidorItems;
