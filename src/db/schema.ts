@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, date, timestamp, text, integer, decimal } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, date, timestamp, text, integer, decimal, boolean } from "drizzle-orm/pg-core";
 
 // ========== SERVIDORES ==========
 export const servidores = pgTable("servidores", {
@@ -154,3 +154,42 @@ export const orientacaoEausencia = pgTable("orientacao_ausencia", {
 
 export type OrientacaoEausencia = typeof orientacaoEausencia.$inferSelect;
 export type NovaOrientacaoEausencia = typeof orientacaoEausencia.$inferInsert;
+
+// ========== REQUERIMENTOS ==========
+export const requerimentos = pgTable("requerimentos", {
+  id: serial("id").primaryKey().notNull(),
+  protocolo: varchar("protocolo", { length: 50 }).notNull().unique(),
+  servidorId: integer("servidor_id").notNull(),
+  tipo: varchar("tipo", { length: 100 }).notNull(),
+  objeto: text("objeto").notNull(),
+  fundamentacao: text("fundamentacao"),
+  dataProtocolo: timestamp("data_protocolo").defaultNow().notNull(),
+  prazoResposta: date("prazo_resposta"),
+  status: varchar("status", { length: 30 }).default("RECEBIDO").notNull(),
+  decisao: varchar("decisao", { length: 20 }), // DEFERIDO, INDEFERIDO, PARCIAL, EM_ANALISE
+  fundamentacaoDecisao: text("fundamentacao_decisao"),
+  dataDecisao: timestamp("data_decisao"),
+  gestorId: integer("gestor_id"), // quem decidiu
+  cienciaServidor: boolean("ciencia_servidor").default(false),
+  dataCienciaServidor: timestamp("data_ciencia_servidor"),
+  observacoes: text("observacoes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Histórico de tramitação do requerimento
+export const requerimentoTramitacoes = pgTable("requerimento_tramitacoes", {
+  id: serial("id").primaryKey().notNull(),
+  requerimentoId: integer("requerimento_id").notNull(),
+  statusAnterior: varchar("status_anterior", { length: 30 }),
+  statusNovo: varchar("status_novo", { length: 30 }).notNull(),
+  observacao: text("observacao"),
+  responsavel: varchar("responsavel", { length: 100 }), // nome de quem fez a tramitação
+  tipoResponsavel: varchar("tipo_responsavel", { length: 20 }), // SERVIDOR ou GESTOR
+  dataTramitacao: timestamp("data_tramitacao").defaultNow().notNull(),
+});
+
+export type Requerimento = typeof requerimentos.$inferSelect;
+export type NovoRequerimento = typeof requerimentos.$inferInsert;
+export type RequerimentoTramitacao = typeof requerimentoTramitacoes.$inferSelect;
+export type NovaRequerimentoTramitacao = typeof requerimentoTramitacoes.$inferInsert;

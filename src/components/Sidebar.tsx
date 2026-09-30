@@ -28,6 +28,7 @@ export default function Sidebar({ variant }: SidebarProps) {
     { icon: Award, label: 'Evolução Funcional', href: '/gestao/evolucao-funcional' },
     { icon: FileText, label: 'Licença Prêmio', href: '/gestao/licenca-premio' },
     { icon: BookOpen, label: 'O.T. e Ausência', href: '/gestao/orientacao-ausencia' },
+    { icon: FileText, label: 'Requerimentos', href: '/gestao/requerimentos' },
     { icon: Printer, label: 'Relatórios', href: '/gestao/relatorios' },
     { icon: History, label: 'Histórico', href: '/gestao/historico' },
     { icon: Settings, label: 'Configurações', href: '/gestao/Configuracoes' },
@@ -40,6 +41,7 @@ export default function Sidebar({ variant }: SidebarProps) {
     { icon: Award, label: 'Evolução Funcional', href: '/servidor/evolucao-funcional' },
     { icon: FileText, label: 'Licença Prêmio', href: '/servidor/licenca-premio' },
     { icon: BookOpen, label: 'O.T. e Ausência', href: '/servidor/orientacao-ausencia' },
+    { icon: FileText, label: 'Requerimentos', href: '/servidor/requerimentos' },
     { icon: History, label: 'Histórico', href: '/servidor/historico' },
   ];
 
